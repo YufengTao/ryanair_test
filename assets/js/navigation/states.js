@@ -1,0 +1,26 @@
+/*
+ This file is shared across Node/Angular to allow HTML5 pushState create absolute URLs for Angular state.
+ */
+var states = [
+    //default root page is 'index.html'
+    {
+        stateName: 'root',
+        
+        stateObj: {
+            url: '/',
+            views: {
+                "main": {
+                    templateUrl: "/partials/pages/flight/search.html",
+                }
+            },
+            data: {
+                
+            },
+            resolve:{
+
+            }
+        }
+        
+    }
+    
+];  

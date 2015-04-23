@@ -1,0 +1,24 @@
+<div ng-controller="FlightSearchController">
+
+	<!-- search box -->
+	<div>
+		<div>
+			<label>From</label><input ng-model="targetRouteInfo.cityFrom"/>
+			<label>To</label><input ng-model="targetRouteInfo.cityTo"/>
+		</div>
+		<div>
+			<label>Start Date</label><input ng-model="targetRouteInfo.searchStartDate"/>
+			<label>End Date</label><input ng-model="targetRouteInfo.searchEndDate"/>
+		</div>
+		<div>
+			<label>Max Price</label><input ng-model="targetRouteInfo.maxPrice"/>
+		</div>
+		<div ng-click="search()">Search</div>
+	</div>
+
+	<!-- selections box -->
+	<div></div>
+
+	<!-- result box  -->
+	<div></div>
+</div>

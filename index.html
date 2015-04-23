@@ -1,0 +1,35 @@
+<!doctype html>
+<!--[if lt IE 7]>
+<html class="no-js lt-ie9 lt-ie8 lt-ie7" ng-app="nbApp"> <![endif]-->
+<!--[if IE 7]>
+<html class="no-js lt-ie9 lt-ie8" ng-app="nbApp"> <![endif]-->
+<!--[if IE 8]>
+<html class="no-js lt-ie9" ng-app="nbApp"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" ng-app="rtApp" ng-strict-di> <!--<![endif]-->
+    <head>
+    	<base href="/">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Ryanair Test Web App</title>
+        <meta name="description" content="">
+        <meta name="fragment" content="!">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+        <link data-ng-href="/assets/styles/main.css" rel="stylesheet"/>
+    </head>
+    <body ng-class="$root.pageClass">
+        <div ui-view="vertmenu" class="vert-menu hidden-lg sb-slidebar sb-left sb-static sb-style-push sb-width-custom sb-momentum-scrolling" data-sb-width="280px"></div>
+        <div class="body-content-wrapper" id="sb-site">
+            <div class="header-bar">
+                <div ui-view="topNavBar"></div>
+            </div>
+            <div ui-view="main"></div>
+        </div>        
+        <div ui-view="footer" class="footer-wrapper visible-lg"></div>
+        <!--[if lt IE 9]>
+        <script src="/assets/bower_components/es5-shim/es5-shim.js"></script>
+        <script src="/assets/bower_components/json3/lib/json3.min.js"></script>
+        <![endif]-->
+        <script src="/assets/js/dist/built.js"></script>
+    </body>
+</html>
