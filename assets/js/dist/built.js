@@ -1,4 +1,4 @@
-/*! ryanair-test-app - v1.0.0 - 2015-04-23 */
+/*! ryanair-test-app - v1.0.0 - 2015-04-24 */
 (function(window, document, undefined) {'use strict';
 
 /**
@@ -26348,12 +26348,35 @@ angular.module('rt.services',[])
 	.factory('CountryService',[ '$q', 'CountryResource',
 		function($q, CountryResource){
 
-		var getAllCountries = function(){
+		var getAllCountriesWithProxy = function(){
 
 			var deferred = $q.defer();
 
-			CountryResource.query(
+			CountryResource.get_with_proxy().query(
 				{},
+				function(data){
+					//success handler
+					deferred.resolve(data);
+
+				},function(err){
+					//error handler
+					console.log('handle error msg when CountryResource.query() failed:');
+					console.log(err);
+
+					deferred.reject({
+						hasError: true,
+						msg:err.data,
+						responseStatus:err.status
+					});
+			});
+			return deferred.promise;
+		};
+
+		var getAllCountriesWithJSONP = function(){
+
+			var deferred = $q.defer();
+
+			CountryResource.get_with_jsonp().then(
 				function(data){
 					//success handler
 					deferred.resolve(data);
@@ -26396,8 +26419,9 @@ angular.module('rt.services',[])
 		};
 
 		return{
-			getAllCountries: 			getAllCountries	,
-			getAllCountriesWithHttp: 	getAllCountriesWithHttp	
+			getAllCountriesWithProxy: 	getAllCountriesWithProxy	,
+			getAllCountriesWithHttp: 	getAllCountriesWithHttp,
+			getAllCountriesWithJSONP:   getAllCountriesWithJSONP	
 		}
 	}]);
 
@@ -26408,18 +26432,29 @@ angular.module('rt.resources', [])
     .factory('CountryResource', ['$resource','$http', function ($resource, $http) {
         var get = function(){ 
                 return $http({
-                method: 'GET',
-                url: 'http://ryanair-test.herokuapp.com/api/countries',
-                //url:'/country',
-                headers: {
-                    'Content-Type':'Application/JSON'
-                },
-                withCredentials: true
-            });
+                    method: 'GET',
+                    url: 'http://ryanair-test.herokuapp.com/api/countries',
+                    //url:'/country',
+                    headers: {
+                        'Content-Type':'Application/JSON'
+                    },
+                    withCredentials: true
+                });
         }
 
-        return $resource('/country/:action', {action:"@action"},{});
-        //return $resource('http://ryanair-test.herokuapp.com/api/countries/:action', {action:"@action"},{});
+        var get_with_jsonp = function(){
+            return $http.jsonp('http://ryanair-test.herokuapp.com/api/countries?callback=JSON_CALLBACK');
+        }
+
+        var get_with_proxy = function(){
+            return $resource('/countries/:action', {action:"@action"},{});
+        }
+
+        return {
+            get: get,
+            get_with_jsonp: get_with_jsonp,
+            get_with_proxy: get_with_proxy
+        }
     }]);
 
 
@@ -26437,11 +26472,17 @@ angular.module('rt.controllers', [])
 				maxPrice 			: '',
 			};
 
+			$scope.displayFromPanel 	= false;
+			$scope.displayToPanel 		= false;
+			$scope.displayMap 			= false;
+
+			$scope.displayResults 		= false;
+
 			$scope.search = function(){
 				console.log('start to search...');
-
+				$scope.displayFromPanel = !$scope.displayFromPanel;
 				
-				CountryService.getAllCountries().then(function(data){
+				CountryService.getAllCountriesWithProxy().then(function(data){
 					var countries = data;
 					console.log(countries);
 					console.log(countries[0].name);
@@ -26597,6 +26638,7 @@ angular.module('rt.config')
 angular.module('rtApp', [
     'ngResource',
     'ui.router',
+    'ui.bootstrap',
     'rt.config',
     'rt.controllers',
     'rt.resources',

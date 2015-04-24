@@ -3,6 +3,7 @@
 angular.module('rtApp', [
     'ngResource',
     'ui.router',
+    'ui.bootstrap',
     'rt.config',
     'rt.controllers',
     'rt.resources',

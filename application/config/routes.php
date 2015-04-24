@@ -41,11 +41,17 @@
 $route['default_controller'] = "home";
 //$route['(:any)'] = 'pages/view/$1';
 
-$route['airport/(:any)'] 	= "airport/$1";
-$route['airport'] 			= "airport";
+$route['airports/(:any)'] 	= "airports/$1";
+$route['airports'] 			= "airports";
 
-$route['country/(:any)']	= "country/$1";
-$route['country'] 			= "country";
+$route['countries/(:any)']	= "countries/$1";
+$route['countries'] 		= "countries";
+
+$route['routes/(:any)'] 	= "routes/$1";
+$route['routes']			= "routes";
+
+$route['cheap-flights/(:any)'] 	= "cheapflights/$1";
+$route['cheap-flights']			= "cheapflights";
 
 
 

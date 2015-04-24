@@ -4,12 +4,35 @@ angular.module('rt.services',[])
 	.factory('CountryService',[ '$q', 'CountryResource',
 		function($q, CountryResource){
 
-		var getAllCountries = function(){
+		var getAllCountriesWithProxy = function(){
 
 			var deferred = $q.defer();
 
-			CountryResource.query(
+			CountryResource.get_with_proxy().query(
 				{},
+				function(data){
+					//success handler
+					deferred.resolve(data);
+
+				},function(err){
+					//error handler
+					console.log('handle error msg when CountryResource.query() failed:');
+					console.log(err);
+
+					deferred.reject({
+						hasError: true,
+						msg:err.data,
+						responseStatus:err.status
+					});
+			});
+			return deferred.promise;
+		};
+
+		var getAllCountriesWithJSONP = function(){
+
+			var deferred = $q.defer();
+
+			CountryResource.get_with_jsonp().then(
 				function(data){
 					//success handler
 					deferred.resolve(data);
@@ -52,7 +75,8 @@ angular.module('rt.services',[])
 		};
 
 		return{
-			getAllCountries: 			getAllCountries	,
-			getAllCountriesWithHttp: 	getAllCountriesWithHttp	
+			getAllCountriesWithProxy: 	getAllCountriesWithProxy	,
+			getAllCountriesWithHttp: 	getAllCountriesWithHttp,
+			getAllCountriesWithJSONP:   getAllCountriesWithJSONP	
 		}
 	}]);
