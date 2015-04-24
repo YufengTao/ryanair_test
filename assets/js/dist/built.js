@@ -26341,10 +26341,43 @@ var states = [
     }
     
 ];  
-
 'use strict';
 
 angular.module('rt.services',[])
+	.factory('AirportService',[ '$q', 'AirportResource',
+		function($q, AirportResource){
+
+		var getAllAirportsWithProxy = function(){
+
+			var deferred = $q.defer();
+
+			AirportResource.get_with_proxy().query(
+				{},
+				function(data){
+					//success handler
+					deferred.resolve(data);
+
+				},function(err){
+					//error handler
+					console.log('handle error msg when AirportResource.query() failed:');
+					console.log(err);
+
+					deferred.reject({
+						hasError: true,
+						msg:err.data,
+						responseStatus:err.status
+					});
+			});
+			return deferred.promise;
+		};
+
+		return{
+			getAllAirportsWithProxy: 	getAllAirportsWithProxy	
+		}
+	}]);
+'use strict';
+
+angular.module('rt.services')
 	.factory('CountryService',[ '$q', 'CountryResource',
 		function($q, CountryResource){
 
@@ -26424,11 +26457,62 @@ angular.module('rt.services',[])
 			getAllCountriesWithJSONP:   getAllCountriesWithJSONP	
 		}
 	}]);
+'use strict';
 
+angular.module('rt.services')
+	.factory('RoutesService',[ '$q', 'RoutesResource',
+		function($q, RoutesResource){
 
+		var getAllRoutesWithProxy = function(){
+
+			var deferred = $q.defer();
+
+			RoutesResource.get_with_proxy().query(
+				{},
+				function(data){
+					//success handler
+					deferred.resolve(data);
+
+				},function(err){
+					//error handler
+					console.log('handle error msg when RoutesResource.query() failed:');
+					console.log(err);
+
+					deferred.reject({
+						hasError: true,
+						msg:err.data,
+						responseStatus:err.status
+					});
+			});
+			return deferred.promise;
+		};
+
+		return{
+			getAllRoutesWithProxy: 	getAllRoutesWithProxy	
+		}
+	}]);
 'use strict';
 
 angular.module('rt.resources', [])
+    .factory('AirportResource', ['$resource','$http', function ($resource, $http) {
+
+        var get_with_jsonp = function(){
+            return $http.jsonp('http://ryanair-test.herokuapp.com/api/countries?callback=JSON_CALLBACK');
+        }
+
+        var get_with_proxy = function(){
+            return $resource('/airports/:action', {action:"@action"},{});
+        }
+
+        return {
+            get_with_jsonp: get_with_jsonp,
+            get_with_proxy: get_with_proxy
+        }
+    }]);
+
+'use strict';
+
+angular.module('rt.resources')
     .factory('CountryResource', ['$resource','$http', function ($resource, $http) {
         var get = function(){ 
                 return $http({
@@ -26457,12 +26541,30 @@ angular.module('rt.resources', [])
         }
     }]);
 
+'use strict';
+
+angular.module('rt.resources')
+    .factory('RoutesResource', ['$resource','$http', function ($resource, $http) {
+
+        var get_with_jsonp = function(){
+            return $http.jsonp('http://ryanair-test.herokuapp.com/api/routes?callback=JSON_CALLBACK');
+        }
+
+        var get_with_proxy = function(){
+            return $resource('/routes/:action', {action:"@action"},{});
+        }
+
+        return {
+            get_with_jsonp: get_with_jsonp,
+            get_with_proxy: get_with_proxy
+        }
+    }]);
 
 'use strict';
 
 angular.module('rt.controllers', [])
-	.controller('FlightSearchController', ['$scope', '$rootScope', '$state', 'CountryService',
-		function($scope, $rootScope, $state, CountryService){
+	.controller('FlightSearchController', ['$scope', '$rootScope', '$state', 'CountryService','AirportService','RoutesService',
+		function($scope, $rootScope, $state, CountryService, AirportService, RoutesService){
 
 			$scope.targetRouteInfo = {
 				cityFrom 	: '',
@@ -26489,6 +26591,24 @@ angular.module('rt.controllers', [])
 				},function(){
 
 				});
+
+				AirportService.getAllAirportsWithProxy().then(function(data){
+					var airports = data;
+					console.log(airports);
+					console.log(airports[0].name);
+				},function(){
+
+				});
+
+				RoutesService.getAllRoutesWithProxy().then(function(data){
+					var routes = data;
+					console.log(routes);
+					console.log(routes[0].name);
+				},function(){
+
+				});
+
+				
 				
 			};
 		}]);
@@ -26640,9 +26760,10 @@ angular.module('rtApp', [
     'ui.router',
     'ui.bootstrap',
     'rt.config',
-    'rt.controllers',
+    
     'rt.resources',
-    'rt.services'
+    'rt.services',
+    'rt.controllers'
 
 
 ]);

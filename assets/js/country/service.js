@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('rt.services',[])
+angular.module('rt.services')
 	.factory('CountryService',[ '$q', 'CountryResource',
 		function($q, CountryResource){
 

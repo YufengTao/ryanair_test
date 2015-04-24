@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('rt.resources', [])
+angular.module('rt.resources')
     .factory('CountryResource', ['$resource','$http', function ($resource, $http) {
         var get = function(){ 
                 return $http({

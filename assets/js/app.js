@@ -5,9 +5,10 @@ angular.module('rtApp', [
     'ui.router',
     'ui.bootstrap',
     'rt.config',
-    'rt.controllers',
+    
     'rt.resources',
-    'rt.services'
+    'rt.services',
+    'rt.controllers'
 
 
 ]);
