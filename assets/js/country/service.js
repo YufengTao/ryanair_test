@@ -79,4 +79,72 @@ angular.module('rt.services')
 			getAllCountriesWithHttp: 	getAllCountriesWithHttp,
 			getAllCountriesWithJSONP:   getAllCountriesWithJSONP	
 		}
-	}]);
+	}]).factory('Country', ['$q', function($q){
+        function Country(countryData){
+            if( countryData && 
+                !Functions.isEmpty(countryData)){
+                this.setData(countryData);
+            }
+        };
+
+        Country.prototype = {
+            setData: function(countryData){
+                angular.extend(this, countryData);
+            }
+        };
+        return Country;
+    }])
+    .factory('CountriesManager',['$q', 'Functions', 'CountryService',
+    	function($q, Functions, CountryService){
+        var countriesManager = {
+            _countries: [],
+
+            getCountries: function (){
+                var deferred = $q.defer();
+
+                if(Functions.isEmpty(this._countries)){
+                    
+                    this.updateCountries().then(function(data){
+                    	console.log('inside service before resolve...');
+                    	console.log(data);
+                        //deferred.resolve(data);
+                        deferred.resolve(Functions.deepClone(data.data));
+                    },function(err){
+                        deferred.reject(err);
+                    });
+                }
+                else{
+                    deferred.resolve(this._countries);
+                }
+
+                return deferred.promise;
+            },
+
+            setCountries: function (countries){
+                this._countries = countries;
+            },
+
+            updateCountries: function (){
+                var deferred = $q.defer();
+                var manager = this;
+                    
+                CountryService.getAllCountriesWithProxy().then(function(data){
+                	console.log('inside updateCountries:');
+                	console.log(data);
+                    manager.setCountries(data);
+
+                    deferred.resolve({hasError:false,msg:'',data:data});
+                },function(err){
+                    deferred.reject({hasError:false,msg:'',data:err});
+
+                });
+
+                return deferred.promise;
+            },
+
+            reset : function(){
+                this._countries = [];
+            }
+        };
+        return countriesManager;
+    }]);;

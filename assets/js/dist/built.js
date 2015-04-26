@@ -1,4 +1,4 @@
-/*! ryanair-test-app - v1.0.0 - 2015-04-24 */
+/*! ryanair-test-app - v1.0.0 - 2015-04-26 */
 (function(window, document, undefined) {'use strict';
 
 /**
@@ -26344,8 +26344,8 @@ var states = [
 'use strict';
 
 angular.module('rt.services',[])
-	.factory('AirportService',[ '$q', 'AirportResource',
-		function($q, AirportResource){
+	.factory('AirportService',[ '$q', 'AirportResource', 'Functions',
+		function($q, AirportResource, Functions){
 
 		var getAllAirportsWithProxy = function(){
 
@@ -26374,7 +26374,71 @@ angular.module('rt.services',[])
 		return{
 			getAllAirportsWithProxy: 	getAllAirportsWithProxy	
 		}
-	}]);
+	}])
+	.factory('Airport', ['$q', function($q){
+        function Airport(airportDate){
+            if( airportDate && 
+                !Functions.isEmpty(airportDate)){
+                this.setData(airportDate);
+            }
+        };
+
+        Airport.prototype = {
+            setData: function(airportDate){
+                angular.extend(this, airportDate);
+            }
+        };
+        return Airport;
+    }])
+    .factory('AirportsManager',['$q', 'Functions', 'AirportService',
+    	function($q, Functions, AirportService){
+        var airportsManager = {
+            _airports: [],
+
+            getAirports: function (){
+                var deferred = $q.defer();
+
+                if(Functions.isEmpty(this._airports)){
+                    
+                    this.updateAirports().then(function(data){
+                        deferred.resolve(Functions.deepClone(data));
+                    },function(err){
+                        deferred.reject(err);
+                    });
+                }
+                else{
+                    deferred.resolve(this._airports);
+                }
+
+                return deferred.promise;
+            },
+
+            setAirports: function (airports){
+                this._airports = airports;
+            },
+
+            updateAirports: function (){
+                var deferred = $q.defer();
+                var manager = this;
+                    
+                AirportService.getAllAirportsWithProxy().then(function(data){
+                    manager.setAirports(data.data);
+
+                    deferred.resolve({hasError:false,msg:'',data:data});
+                },function(err){
+                    deferred.reject({hasError:false,msg:'',data:err});
+
+                });
+
+                return deferred.promise;
+            },
+
+            reset : function(){
+                this._airports = [];
+            }
+        };
+        return airportsManager;
+    }]);
 'use strict';
 
 angular.module('rt.services')
@@ -26456,7 +26520,75 @@ angular.module('rt.services')
 			getAllCountriesWithHttp: 	getAllCountriesWithHttp,
 			getAllCountriesWithJSONP:   getAllCountriesWithJSONP	
 		}
-	}]);
+	}]).factory('Country', ['$q', function($q){
+        function Country(countryData){
+            if( countryData && 
+                !Functions.isEmpty(countryData)){
+                this.setData(countryData);
+            }
+        };
+
+        Country.prototype = {
+            setData: function(countryData){
+                angular.extend(this, countryData);
+            }
+        };
+        return Country;
+    }])
+    .factory('CountriesManager',['$q', 'Functions', 'CountryService',
+    	function($q, Functions, CountryService){
+        var countriesManager = {
+            _countries: [],
+
+            getCountries: function (){
+                var deferred = $q.defer();
+
+                if(Functions.isEmpty(this._countries)){
+                    
+                    this.updateCountries().then(function(data){
+                    	console.log('inside service before resolve...');
+                    	console.log(data);
+                        //deferred.resolve(data);
+                        deferred.resolve(Functions.deepClone(data.data));
+                    },function(err){
+                        deferred.reject(err);
+                    });
+                }
+                else{
+                    deferred.resolve(this._countries);
+                }
+
+                return deferred.promise;
+            },
+
+            setCountries: function (countries){
+                this._countries = countries;
+            },
+
+            updateCountries: function (){
+                var deferred = $q.defer();
+                var manager = this;
+                    
+                CountryService.getAllCountriesWithProxy().then(function(data){
+                	console.log('inside updateCountries:');
+                	console.log(data);
+                    manager.setCountries(data);
+
+                    deferred.resolve({hasError:false,msg:'',data:data});
+                },function(err){
+                    deferred.reject({hasError:false,msg:'',data:err});
+
+                });
+
+                return deferred.promise;
+            },
+
+            reset : function(){
+                this._countries = [];
+            }
+        };
+        return countriesManager;
+    }]);;
 'use strict';
 
 angular.module('rt.services')
@@ -26467,10 +26599,12 @@ angular.module('rt.services')
 
 			var deferred = $q.defer();
 
-			RoutesResource.get_with_proxy().query(
+			RoutesResource.get_with_proxy().get(
 				{},
 				function(data){
 					//success handler
+					console.log('the data inside the resource:');
+					console.log(data);
 					deferred.resolve(data);
 
 				},function(err){
@@ -26489,6 +26623,115 @@ angular.module('rt.services')
 
 		return{
 			getAllRoutesWithProxy: 	getAllRoutesWithProxy	
+		}
+	}]).factory('Route', ['$q', function($q){
+        function Route(routeDate){
+            if( routeDate && 
+                !Functions.isEmpty(routeDate)){
+                this.setData(routeDate);
+            }
+        };
+
+        Route.prototype = {
+            setData: function(routeDate){
+                angular.extend(this, routeDate);
+            }
+        };
+        return Route;
+    }])
+    .factory('RoutesManager',['$q', 'Functions', 'RoutesService',
+    	function($q, Functions, RoutesService){
+        var routesManager = {
+            _routes: [],
+
+            getRoutes: function (){
+                var deferred = $q.defer();
+
+                if(Functions.isEmpty(this._routes)){
+                    
+                    this.updateRoutes().then(function(data){
+                    	console.log('before return:');
+                    	console.log(data);
+                    	
+                        deferred.resolve(Functions.deepClone(data));
+                    },function(err){
+                        deferred.reject(err);
+                    });
+                }
+                else{
+                    deferred.resolve(this._routes);
+                }
+
+                return deferred.promise;
+            },
+
+            setRoutes: function (routes){
+                this._routes = routes;
+            },
+
+            updateRoutes: function (){
+                var deferred = $q.defer();
+                var manager = this;
+                    
+                RoutesService.getAllRoutesWithProxy().then(function(data){
+                	console.log('before setting the data');
+                	console.log(data);
+
+                    manager.setRoutes(data.data);
+
+                    deferred.resolve({hasError:false,msg:'',data:data});
+                },function(err){
+                    deferred.reject({hasError:false,msg:'',data:err});
+
+                });
+
+                return deferred.promise;
+            },
+
+            reset : function(){
+                this._routes = [];
+            }
+        };
+        return routesManager;
+    }]);;
+'use strict';
+
+angular.module('rt.services')
+	.factory('FlightService',[ '$q', 'FlightResource',
+		function($q, FlightResource){
+
+		var getCheapFlightSingleLineWithProxy = function(searchObj){
+
+			var deferred = $q.defer();
+
+			FlightResource.get_with_proxy().get(
+				{
+					from : searchObj.from,
+					to : searchObj.to,
+					start_date : searchObj.start_date,
+					end_date : searchObj.end_date,
+					max_price : searchObj.max_price
+				},
+				function(data){
+					//success handler
+					deferred.resolve(data);
+
+				},function(err){
+					//error handler
+					console.log('handle error msg when FlightResource.query() failed:');
+					console.log(err);
+
+					deferred.reject({
+						hasError: true,
+						msg:err.data,
+						responseStatus:err.status
+					});
+			});
+			return deferred.promise;
+		};
+
+		return{
+			getCheapFlightSingleLineWithProxy: 	getCheapFlightSingleLineWithProxy	
 		}
 	}]);
 'use strict';
@@ -26562,17 +26805,46 @@ angular.module('rt.resources')
 
 'use strict';
 
+angular.module('rt.resources')
+    .factory('FlightResource', ['$resource','$http', function ($resource, $http) {
+
+        var get_with_proxy = function(){
+            return $resource('/cheap-flights/:from/:to/:start_date/:end_date/:max_price', {
+                from:"@from",
+                to:"@to",
+                start_date:"@start_date",
+                end_date:"@end_date",
+                max_price:"@max_price",
+            },{});
+        }
+
+        return {
+            get_with_proxy: get_with_proxy
+        }
+    }]);
+
+'use strict';
+
 angular.module('rt.controllers', [])
-	.controller('FlightSearchController', ['$scope', '$rootScope', '$state', 'CountryService','AirportService','RoutesService',
-		function($scope, $rootScope, $state, CountryService, AirportService, RoutesService){
+	.controller('FlightSearchController', ['$scope', '$rootScope', '$state', 'CountryService','AirportService','RoutesService', 'AirportsManager', 'CountriesManager', 'FlightService', 'RoutesManager', 'Functions',
+		function($scope, $rootScope, $state, CountryService, AirportService, RoutesService,AirportsManager, CountriesManager, FlightService, RoutesManager, Functions){
 
 			$scope.targetRouteInfo = {
-				cityFrom 	: '',
-				cityTo 		: '',
+				cityFrom 	: {
+					name: ''
+				},
+				cityTo 		: {
+					name: ''
+				},
 				searchStartDate 	: '',
 				searchEndDate 		: '',
 				maxPrice 			: '',
 			};
+
+			$scope.allAirports 		= [];
+			$scope.allCountries 	= [];
+			$scope.allRoutes 		= [];
+			$scope.desRoutes 		= [];
 
 			$scope.displayFromPanel 	= false;
 			$scope.displayToPanel 		= false;
@@ -26580,37 +26852,143 @@ angular.module('rt.controllers', [])
 
 			$scope.displayResults 		= false;
 
+			$scope.calendarOpened = false;
+
+			$scope.formats = [ 'd MMM yyyy','dd-MMMM-yyyy', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
+  			$scope.format = $scope.formats[0];
+
+  			$scope.dateOptions = {
+			    formatYear: 'yy',
+			    startingDay: 1
+			};
+
+			$scope.currentDate = new Date();
+			$scope.departureCalStartDate 	= $scope.currentDate;
+			$scope.departureCalEndDate 		= $scope.currentDate;
+			$scope.returnCalStartDate 		= $scope.currentDate;
+
+
+  			$scope.openCalendar = function($event) {
+			    $event.preventDefault();
+			    $event.stopPropagation();
+
+			    $scope.calendarOpened = !$scope.calendarOpened;
+			};
+
+			$scope.onChangeStartDate = function(newDate){
+				console.log('on change fired on controller...');
+				//$scope.returnCalStartDate = newDate;
+				if( $scope.targetRouteInfo.searchEndDate < newDate){
+					$scope.targetRouteInfo.searchEndDate = new Date(newDate.getTime());
+				}
+			};
+
+			$scope.onChangeReturnDate = function(newDate){
+				console.log('the return date changed:');
+				console.log(newDate);
+				console.log('current departure date:');
+				console.log($scope.targetRouteInfo.searchStartDate);
+			
+				if( $scope.targetRouteInfo.searchStartDate > newDate){
+					console.log('udpate the searchStartDate:');
+					console.log(new Date(newDate.getTime()));
+					$scope.targetRouteInfo.searchStartDate = new Date(newDate.getTime());
+				}
+			};
+
+			$scope.showFromPanel = function(){
+				$scope.displayFromPanel = true;
+			}
+
+			$scope.hideFromPanel = function(){
+				$scope.displayFromPanel = false;
+			}
+
+			$scope.showToPanel = function(){
+				$scope.displayToPanel = true;
+			}
+
+			$scope.hideToPanel = function(){
+				$scope.displayToPanel = false;
+			}
+
 			$scope.search = function(){
 				console.log('start to search...');
-				$scope.displayFromPanel = !$scope.displayFromPanel;
+				//$scope.displayFromPanel = !$scope.displayFromPanel;
 				
-				CountryService.getAllCountriesWithProxy().then(function(data){
-					var countries = data;
-					console.log(countries);
-					console.log(countries[0].name);
-				},function(){
+				var searchOptions = {
+					from 	: $scope.targetRouteInfo.cityFrom.iataCode,
+					to 		: $scope.targetRouteInfo.cityTo.iataCode,
+					start_date : Functions.getSearchStdDateStr($scope.targetRouteInfo.searchStartDate),
+					end_date : Functions.getSearchStdDateStr($scope.targetRouteInfo.searchStartDate),
+					max_price: $scope.targetRouteInfo.maxPrice
+				}
+				
+				FlightService.getCheapFlightSingleLineWithProxy(searchOptions).then(function(data){
+					console.log('the cheap flight info is:');
+					console.log(data);
+				}, function(){
 
 				});
-
-				AirportService.getAllAirportsWithProxy().then(function(data){
-					var airports = data;
-					console.log(airports);
-					console.log(airports[0].name);
-				},function(){
-
-				});
-
-				RoutesService.getAllRoutesWithProxy().then(function(data){
-					var routes = data;
-					console.log(routes);
-					console.log(routes[0].name);
-				},function(){
-
-				});
-
 				
 				
 			};
+
+			AirportsManager.getAirports().then(function(data){
+
+				$scope.allAirports = data.data;
+
+				console.log('airports instance has been initialized');
+                console.log(data);
+			}, function(data){
+
+			});
+
+			CountriesManager.getCountries().then(function(data){
+				console.log('allCountries inside controller before assigning...');
+				console.log(data);
+				$scope.allCountries = data;
+
+				console.log('Country instance has been initialized');
+                console.log(data);
+			}, function(data){
+
+			});
+
+
+			RoutesManager.getRoutes().then(function(data){
+
+				delete data.data.$resolved;
+				$scope.allRoutes = data.data;
+
+				console.log('Routes instance has been initialized');
+                console.log(data);
+
+                //the received array is about: departure => [des airport]
+                //need reverse back and cache it: [departure] => des
+                for (var fromAirportCode in data.data){
+
+                	for(var index in data.data[fromAirportCode]){
+                		var desAirportCodeArray = data.data[fromAirportCode];
+                		if(!$scope.desRoutes.hasOwnProperty(desAirportCodeArray[index])){
+	                		$scope.desRoutes[desAirportCodeArray[index]] = [];
+	                	}
+
+	                	if(-1 === ($scope.desRoutes[desAirportCodeArray[index]]).indexOf(fromAirportCode)){
+		                	$scope.desRoutes[desAirportCodeArray[index]].push(fromAirportCode);
+	                	}
+
+
+                	}
+                	
+                }
+
+                console.log('the $scope.desRoutes is:');
+                console.log($scope.desRoutes);
+
+			}, function(data){
+
+			});
 		}]);
 
 'use strict';
@@ -26750,9 +27128,436 @@ angular.module('rt.config')
         latency: 0
     });
 
+'use strict';
+
+angular.module('rt.filters', [])
+    .filter('hightLightCountry', function () {
+        return function (countries, searchNeedle, afterFilterCountryArray) {
+            //console.log('start to filter, the countries are:');
+            //console.log(countries);
+            //console.log("searchNeedle:"+searchNeedle+"<");
+
+            if(afterFilterCountryArray.length > 0){
+                var result_array = [];
+                for (var i = 0; i < countries.length; i++) {
+                    var country = countries[i];
+
+                    if( -1 !== afterFilterCountryArray.indexOf(country.englishSeoName) ){
+                        result_array.push(country);
+                    }
+                }
+
+                return result_array;
+            }
+            
+            var searchMatch = new RegExp(searchNeedle, 'i');
+            for (var i = 0; i < countries.length; i++) {
+                var country = countries[i];
+                console.log('target is:'+String.prototype.trim(searchNeedle));
+                if( !angular.isString(searchNeedle) || 
+                    '' == searchNeedle.trim(searchNeedle) ){
+                    country.searchMatched = false;  
+                }
+                else if (searchMatch.test(country.name)) {
+                    country.searchMatched = true;
+                }
+                else{
+                    country.searchMatched = false;  
+                } 
+            
+            }
+            return countries;
+        };
+
+    }).filter('filterAirport', ['Functions',function (Functions) {
+        return function (airports, searchNeedle, selectedCountry, afterFilterAirportArray) {
+            //console.log('start to filter, the airports are:');
+            //console.log(airports);
+            //console.log("searchNeedle:"+searchNeedle+"<");
+            var result_array = [];
+            var newRangeAirportArray = [];
+            
+            var searchMatch = new RegExp(searchNeedle, 'i');
+
+            if(afterFilterAirportArray.length >0){
+                for (var i = 0; i < airports.length; i++) {
+                    var airport = airports[i];
+                    
+                    if ( -1 !== afterFilterAirportArray.indexOf( airport.iataCode) ){
+                        result_array.push(airport);
+                    }
+                }
+                newRangeAirportArray = result_array;
+            }
+            else{
+                newRangeAirportArray = airports;
+            }
+
+            if(!Functions.isEmpty(selectedCountry)){
+                result_array = [];
+
+                for (var i = 0; i < newRangeAirportArray.length; i++) {
+                    var airport = newRangeAirportArray[i];
+                    
+                    if (selectedCountry.englishSeoName == airport.country.englishSeoName) {
+                        result_array.push(airport);
+                    }
+                }
+            }
+            else
+            {
+                result_array = [];
+                for (var i = 0; i < newRangeAirportArray.length; i++) {
+                    var airport = newRangeAirportArray[i];
+                    console.log('target is:'+String.prototype.trim(searchNeedle));
+                    
+                    if (searchMatch.test(airport.name)) {
+                        result_array.push(airport);
+                    }
+                    else if(searchMatch.test(airport.country.name)){
+                        result_array.push(airport);
+                    }
+                
+                }
+
+            }
+            return result_array;
+        };
+
+    }]);
 
 
 
+
+
+
+
+
+angular.module('rt.functions', [])
+    .factory('Functions', ['$rootScope', '$config', function ($rootScope, $config) {
+
+        var numeric_sort = function (a, b) {
+            return a - b;
+        }
+
+        var in_array = function (needle, haystack) {
+            var length = haystack.length;
+            for (var i = 0; i < length; i++) {
+                if (haystack[i] == needle) return true;
+            }
+            return false;
+        };
+
+        var isEmpty = function(targetObj){
+            var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+            if (targetObj == null) return true;
+
+            if (targetObj.length > 0)    return false;
+            if (targetObj.length === 0)  return true;
+
+            for (var key in targetObj) {
+                if (hasOwnProperty.call(targetObj, key)) return false;
+            }
+
+            return true;
+        }
+
+        var getReadableDateStr = function (dateStr) {
+           
+            var monthNames = [ "January", "February", "March", "April", "May", "June",
+                                "July", "August", "September", "October", "November", "December" ];
+            var dateObj = new Date(dateStr);
+            //TODO: validate the dateObj
+            var resultStr = dateObj.getDate()+' '+monthNames[dateObj.getMonth()]+' '+dateObj.getFullYear();
+
+            return resultStr;    
+        };
+
+        var getSearchStdDateStr = function(dateObj){
+            /*String format: yyyy-mm-dd*/
+            if( dateObj && 
+                dateObj instanceof Date){
+
+                var yyyy = dateObj.getFullYear().toString();
+                var mm = (dateObj.getMonth()+1).toString();
+                var dd  = dateObj.getDate().toString();
+
+                return '' + yyyy+'-'+(mm[1]?mm:"0"+mm[0]) + '-' + (dd[1]?dd:"0"+dd[0]);
+            }
+
+            return '';
+        };
+
+        var getWeekDayShortName = function (index){
+            var weekDayShortNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+            return (isNumber(index) && 0 <= index && 6>=index) ? weekDayShortNames[index] : '';
+        }
+
+        var getMonthShortName = function(index){
+            var monthShortNames = ['Jan','Feb','Mar','Apr','May','June','July','Aug','Sep','Oct','Nov','Dec'];
+
+            return (isNumber(index) && 0 <= index && 11>=index) ? monthShortNames[index] : '';
+        };
+
+
+        var deepClone = function(targetObj){
+            var clonedObj;
+
+            //is an array?
+            if(isArray(targetObj)){
+                //console.log('the targetObj is array:');
+                //console.log(targetObj);
+                clonedObj = []; 
+
+
+                for(var key in targetObj){
+                    //console.log("the key value is:"+key+" :"+targetObj[key]);
+                    clonedObj[key] = deepClone(targetObj[key]);
+                }
+            }
+            //is object ?
+            else if(isObject(targetObj) ){
+                clonedObj = new Object();
+                //console.log('it is an object');
+                //console.log(targetObj);
+
+                for(var prop in targetObj){
+                    if( isObject(targetObj[prop])  || 
+                        isArray(targetObj[prop]) ){
+                        
+                        
+                        if( prop.toLowerCase == "promise" ||
+                            prop.substr(0,1) == '$' ||
+                            prop.substr(0,1) == '_'){
+                            continue;
+                        }
+
+                        //console.log('the '+prop+' is type of object');
+                        //console.log(targetObj[prop]);
+
+                        clonedObj[prop] = deepClone(targetObj[prop]);
+
+                        //deepClone(targetObj[prop]);
+                    }
+                    else{
+                        clonedObj[prop] = targetObj[prop];
+                    }
+                }
+            }
+            else{
+                //console.log('not object or array:'+targetObj);
+                clonedObj = targetObj;
+            }
+
+            
+            return clonedObj;
+        }
+
+        var shallowClone = function(obj){
+
+            if (!isObject(obj)) return obj;
+            return isArray(obj) ? obj.slice() : extendObj(obj);
+            
+        };
+
+        var isObject = function(obj) {
+            return obj === Object(obj);
+        };
+
+        var isArray = function(obj){
+            return toString.call(obj) == '[object Array]';
+        };
+
+        var extendObj = function(obj) {
+            var extendedOb = {};
+        
+            if (obj) {
+                for (var prop in obj) {
+                    extendedOb[prop] = obj[prop];
+                }
+            }
+            return extendedOb;
+      };
+
+        var deepCloneArray = function(targetArray){
+            var clonedArray = $.extend(true, [], targetArray);
+
+            //console.log('the cloned array is:');
+            //console.log(clonedArray);
+            //clonedArray.shift().shift();
+
+            //console.log(clonedArray);
+            return clonedArray;
+        };
+
+
+        var mobileCheck = function(){
+            var check = false;
+            (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4)))check = true})(navigator.userAgent||navigator.vendor||window.opera);
+            return check; 
+        };
+
+        //function from stackoverflow
+        var isNumber = function(n) {
+            return !isNaN(parseFloat(n)) && isFinite(n);
+        };
+
+        //define functions for IE browser
+        if(typeof String.prototype.trim !== 'function') {
+            String.prototype.trim = function() {
+                return this.replace(/^\s+|\s+$/g, ''); 
+            }
+        }
+
+        return {
+            in_array:       in_array,
+            isEmpty:        isEmpty,
+            numeric_sort:   numeric_sort,
+            deepClone :             deepClone,
+            deepCloneArray:         deepCloneArray,
+            getSearchStdDateStr : getSearchStdDateStr,
+            getReadableDateStr  :  getReadableDateStr,
+            getMonthShortName   :    getMonthShortName,
+            mobileCheck         :   mobileCheck,
+            isNumber            :   isNumber,
+            isEmpty             :   isEmpty
+
+        };
+
+    }]);
+angular.module('rt.directives', [])
+    .directive('rtDatePicker', ['$compile', 'Functions', function ($compile, Functions) {
+        return {
+            restrict: 'AE',
+            replace: true,
+            terminal: true,
+            scope: { date: '=', mindate: '=', maxdate: '=', onDateChange: "&" },
+            link: function (scope, element, attrs) {
+                
+                scope.calendarOpened = false;
+                scope.dateDisplayStr = '';
+
+                scope.formats = [ 'd MMM yyyy','dd-MMMM-yyyy', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
+                scope.format = scope.formats[0];
+
+                scope.dateOptions = {
+                    formatYear: 'yy',
+                    startingDay: 1
+                };
+
+                console.log('the min date initialized is:');
+                console.log(scope.mindate);
+
+                scope.updateDateDisplayStr = function(date){
+                    scope.dateDisplayStr = date.getDate() + ' ' + Functions.getMonthShortName(date.getMonth()) + ' ' + date.getFullYear();
+                };
+
+                scope.openCalendar = function($event) {
+                    $event.preventDefault();
+                    $event.stopPropagation();
+
+                    scope.calendarOpened = !scope.calendarOpened;
+                };
+
+                scope.onDateChanged = function(){
+                    console.log('date changed fired inside directive');
+                    scope.onDateChange({newDate:scope.date});
+                    scope.updateDateDisplayStr(scope.date);
+                };
+
+                scope.updateDateDisplay = function(){
+                    return date.getDate()+' '+date.getMonth();
+                }
+
+                scope.$watch('date',function(newValue, oldValue){
+                    if(newValue !== oldValue){
+                        scope.updateDateDisplayStr(scope.date);
+                    }
+                });
+
+                //watching the changes to the minDate field
+                /*attrs.$observe('date', function(){
+                    console.log('the min date changed:');
+                    console.log(attrs.mindate);
+                    //scope.mindate = attrs.mindate;
+                });*/
+
+
+                var template =  '<div>'+
+                                    '<input class="form-control" value="{{dateDisplayStr}}" ng-click="openCalendar($event)" />'+
+                                    '<div type="text"  datepicker-popup="{{format}}" ng-model="date" is-open="calendarOpened" ng-click="openCalendar($event)" min-date="mindate" max-date="maxdate" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" close-text="Close" ng-change="onDateChanged()"></div>'+
+                                '</div>';
+
+                $compile(element.html(template).contents())(scope);
+            }
+        }
+    }]).directive('airportPicker',['$compile', 'Functions',
+        function($compile, Functions){
+            return {
+                restrict: 'AE',
+                replace: true,
+                terminal: true,
+                scope: { countries: '=', search: '=', airports: '=', targetairport: '=', routes: '=', filteraparray : '=', filterairport : '=' },
+                link: function (scope, element, attrs) {
+
+                    scope.selectedCountry = {};
+                    scope.afterFilterAirportArray = [];
+                    scope.afterFilterCountryArray = [];
+
+                    scope.selectCountry = function(country){
+                        scope.selectedCountry = country;
+                    };
+
+                    scope.selectAirport = function(airport){
+                        console.log('selected airport is:');
+                        console.log(airport);
+                        scope.targetairport = Functions.deepClone(airport);
+                    };
+
+                    scope.$watch('filterairport.iataCode',function(newValue, oldValue){
+                        console.log('filterairport value changed:');
+                        console.log(oldValue);
+                        console.log(newValue);
+
+                        if( typeof scope.filterairport == "object" &&
+                            scope.filteraparray.hasOwnProperty(newValue) ){
+                            scope.afterFilterAirportArray = scope.filteraparray[newValue];
+                        }
+                        else{
+                            scope.afterFilterAirportArray = [];
+                        }
+
+                        console.log('after filter :');
+                        console.log(scope.afterFilterAirportArray);
+                        if(scope.afterFilterAirportArray.length > 0){
+
+                            for(var airportIndex in scope.airports){
+                                if( -1 !== scope.afterFilterAirportArray.indexOf(scope.airports[airportIndex].iataCode) ){
+                                    scope.afterFilterCountryArray.push(scope.airports[airportIndex].country.englishSeoName);
+                                }
+                            }
+
+                        }
+                        console.log(scope.afterFilterCountryArray);
+                    });
+
+                    var template =  '<div>'+
+                                        '<div>'+
+                                            '<div ng-class="{\'test-hight-light\': country.searchMatched}" ng-repeat="country in countries | hightLightCountry : search : afterFilterCountryArray" ng-click="selectCountry(country)">{{country.name}}</div>'+
+                                        '</div>' +
+                                        '<div style="float:right;position:relative">'+
+                                            '<div ng-repeat="airport in airports | filterAirport : search : selectedCountry : afterFilterAirportArray" ng-click="selectAirport(airport)">{{airport.name}}</div>'+
+                                        '</div>'+
+                                    '</div>';
+                    
+
+                    $compile(element.html(template).contents())(scope);
+                }
+            }
+            
+    }]);
 'use strict';
 
 angular.module('rtApp', [
@@ -26763,7 +27568,10 @@ angular.module('rtApp', [
     
     'rt.resources',
     'rt.services',
-    'rt.controllers'
+    'rt.controllers',
+    'rt.filters',
+    'rt.functions',
+    'rt.directives'
 
 
 ]);

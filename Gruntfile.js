@@ -57,15 +57,17 @@ module.exports = function (grunt) {
                     // Services
                     '<%= yeoman.app %>/js/airport/service.js',
                     '<%= yeoman.app %>/js/country/service.js',
-                    '<%= yeoman.app %>/js/flight-route/service.js',
+                    '<%= yeoman.app %>/js/route/service.js',
+                    '<%= yeoman.app %>/js/flight/service.js',
                     
                     // Resources
                     '<%= yeoman.app %>/js/airport/resource.js',
                     '<%= yeoman.app %>/js/country/resource.js',
-                    '<%= yeoman.app %>/js/flight-route/resource.js',
+                    '<%= yeoman.app %>/js/route/resource.js',
+                    '<%= yeoman.app %>/js/flight/resource.js',
             
                     // Controllers
-                    '<%= yeoman.app %>/js/flight-route/controller.js',
+                    '<%= yeoman.app %>/js/flight/controller.js',
 
                     // Runtime
                     '<%= yeoman.app %>/js/runtime/events.js',

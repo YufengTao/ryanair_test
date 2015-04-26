@@ -3,12 +3,15 @@
 	<!-- search box -->
 	<div>
 		<div>
-			<label>From</label><input ng-model="targetRouteInfo.cityFrom"/>
-			<label>To</label><input ng-model="targetRouteInfo.cityTo"/>
+			<label>From</label><input ng-model="targetRouteInfo.cityFrom.name" ng-click="showFromPanel()" ng-blur=""/>
+			<label>To</label><input ng-model="targetRouteInfo.cityTo.name" ng-click="showToPanel()" />
 		</div>
 		<div>
-			<label>Start Date</label><input ng-model="targetRouteInfo.searchStartDate"/>
-			<label>End Date</label><input ng-model="targetRouteInfo.searchEndDate"/>
+			<label>Depart Date</label>
+			<rt-date-picker date="targetRouteInfo.searchStartDate" mindate="departureCalStartDate" on-date-change="onChangeStartDate(newDate)"></rt-date-picker>
+			
+			<label>Return Date</label>
+			<rt-date-picker date="targetRouteInfo.searchEndDate" mindate="returnCalStartDate" on-date-change="onChangeReturnDate(newDate)"></rt-date-picker>
 		</div>
 		<div>
 			<label>Max Price</label><input ng-model="targetRouteInfo.maxPrice"/>
@@ -19,9 +22,14 @@
 	<!-- selections box -->
 	<div>
 		<div collapse="!displayFromPanel">
-			All of the cities
+			All of the cities:
+			<div airport-picker countries="allCountries" search="targetRouteInfo.cityFrom.name" airports="allAirports" targetairport="targetRouteInfo.cityFrom" routes="allRoutes" filteraparray="allRoutes" filterairport="targetRouteInfo.cityTo"></div>
+
+
 		</div>
-		<div collapse="!displayToPanel"></div>
+		<div collapse="!displayToPanel">
+			<div airport-picker countries="allCountries" search="targetRouteInfo.cityTo.name" airports="allAirports" targetairport="targetRouteInfo.cityTo" routes="allRoutes" filteraparray="desRoutes" filterairport="targetRouteInfo.cityFrom"></div>
+		</div>
 	</div>
 
 	<!-- result box  -->

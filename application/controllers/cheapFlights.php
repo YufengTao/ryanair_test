@@ -2,13 +2,20 @@
 
 class CheapFlights extends CI_Controller {
 
+	public function _remap(){
+
+		$this->index();
+	}
+
 	public function index()
 	{
-		$from 			= isset($_GET['from']) ? $_GET['from'] : '';
-		$to 			= isset($_GET['to']) ? $_GET['to'] : '';
-		$start_date 	= isset($_GET['start_date']) ? $_GET['start_date'] : '';
-		$end_date 		= isset($_GET['end_date']) ? $_GET['end_date'] : '';
-		$max_price 		= isset($_GET['max_price']) ? $_GET['max_price'] : '';
+		$params 		= explode('/', $_SERVER['REQUEST_URI']);
+
+		$from 			= !empty($params[2]) ? $params[2] : '';
+		$to 			= !empty($params[3]) ? $params[3] : '';
+		$start_date 	= !empty($params[4]) ? $params[4] : '';
+		$end_date 		= !empty($params[5]) ? $params[5] : '';
+		$max_price 		= !empty($params[6]) ? $params[6] : '';
 
 		echo file_get_contents("http://ryanair-test.herokuapp.com/api/cheap-flights/$from/$to/$start_date/$end_date/$max_price");
 	}

@@ -8,7 +8,10 @@ angular.module('rtApp', [
     
     'rt.resources',
     'rt.services',
-    'rt.controllers'
+    'rt.controllers',
+    'rt.filters',
+    'rt.functions',
+    'rt.directives'
 
 
 ]);
