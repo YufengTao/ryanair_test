@@ -39,6 +39,15 @@ angular.module('rt.functions', [])
             return resultStr;    
         };
 
+        var getReadableDateStrFromDate = function(dateObj){
+
+            dateObj = (dateObj instanceof Date) ? dateObj : new Date(dateObj);
+
+            var dd  = dateObj.getDate().toString();
+
+            return getWeekDayLongName(dateObj.getDay()) + ', '+getMonthShortName(dateObj.getMonth())+ ' '+ (dd[1]?dd:"0"+dd[0]) + ' '+dateObj.getFullYear();  
+        }
+
         var getSearchStdDateStr = function(dateObj){
             /*String format: yyyy-mm-dd*/
             if( dateObj && 
@@ -58,7 +67,13 @@ angular.module('rt.functions', [])
             var weekDayShortNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
             return (isNumber(index) && 0 <= index && 6>=index) ? weekDayShortNames[index] : '';
-        }
+        };
+
+        var getWeekDayLongName = function (index){
+            var weekDayShortNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+            return (isNumber(index) && 0 <= index && 6>=index) ? weekDayShortNames[index] : '';
+        };
 
         var getMonthShortName = function(index){
             var monthShortNames = ['Jan','Feb','Mar','Apr','May','June','July','Aug','Sep','Oct','Nov','Dec'];
@@ -184,7 +199,9 @@ angular.module('rt.functions', [])
             deepCloneArray:         deepCloneArray,
             getSearchStdDateStr : getSearchStdDateStr,
             getReadableDateStr  :  getReadableDateStr,
+            getReadableDateStrFromDate : getReadableDateStrFromDate,
             getMonthShortName   :    getMonthShortName,
+            getWeekDayLongName  :   getWeekDayLongName,
             mobileCheck         :   mobileCheck,
             isNumber            :   isNumber,
             isEmpty             :   isEmpty

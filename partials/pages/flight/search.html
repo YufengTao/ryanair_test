@@ -1,37 +1,126 @@
-<div ng-controller="FlightSearchController">
-
-	<!-- search box -->
-	<div>
-		<div>
-			<label>From</label><input ng-model="targetRouteInfo.cityFrom.name" ng-click="showFromPanel()" ng-blur=""/>
-			<label>To</label><input ng-model="targetRouteInfo.cityTo.name" ng-click="showToPanel()" />
+<div class="row" ng-controller="FlightSearchController">
+	<div class="col-lg-24">
+		<div class="row msg-box" ng-show="messageType!=''">
+			<div class="col-lg-24" >{{message}}</div>
 		</div>
-		<div>
-			<label>Depart Date</label>
-			<rt-date-picker date="targetRouteInfo.searchStartDate" mindate="departureCalStartDate" on-date-change="onChangeStartDate(newDate)"></rt-date-picker>
+		<!-- search box -->
+		<div class="row search-box">
+			<div class="col-lg-5" id="airport-from-div">
+				<input class="form-control rt-normal-input" ng-model="targetRouteInfo.cityFrom.name" placeholder="{{pageContents.originInputPlaceHolder}}" ng-click="showFromPanel()" ng-blur="autoSelectDepAirport()"/>
+			</div>
+			<div class="col-lg-5" id="airport-to-div">
+				<input class="form-control rt-normal-input" ng-model="targetRouteInfo.cityTo.name" placeholder="{{pageContents.desInputPlaceHolder}}" ng-click="showToPanel()" ng-blur="autoSelectReturnAirport()"/>
+			</div>
+			<div class="col-lg-4" id="dep-date-div">
+				<rt-date-picker date="targetRouteInfo.searchStartDate" mindate="departureCalStartDate" on-date-change="onChangeStartDate(newDate)" phtext="pageContents.depDateInputPlaceHolder"></rt-date-picker>
+			</div>
+			<div class="col-lg-4" id="return-date-div">
+				<rt-date-picker date="targetRouteInfo.searchEndDate" mindate="returnCalStartDate" on-date-change="onChangeReturnDate(newDate)" phtext="pageContents.returnDateInputPlaceHolder"></rt-date-picker>
+			</div>
+			<div class="col-lg-3" id="price-div">
+				<input class="form-control rt-normal-input" ng-model="targetRouteInfo.maxPrice" placeholder="{{pageContents.maxPriceInputPlaceHolder}}" />
+			</div>
+			<div class="col-lg-3" id="search-btn-div">
+				<div class="btn rt-search-button" id="search-button" ng-click="search()">Search</div>
+			</div>
 			
-			<label>Return Date</label>
-			<rt-date-picker date="targetRouteInfo.searchEndDate" mindate="returnCalStartDate" on-date-change="onChangeReturnDate(newDate)"></rt-date-picker>
 		</div>
-		<div>
-			<label>Max Price</label><input ng-model="targetRouteInfo.maxPrice"/>
+
+		<div class="row search-vise-options-row">
+			<div class="col-lg-3">Round Trip <input type="radio" ng-checked="roundTrip" ng-click="roundTrip=true" /></div>
+			<div class="col-lg-3">One Way <input type="radio" ng-checked="!roundTrip"  ng-click="roundTrip=false"/></div>
 		</div>
-		<div ng-click="search()">Search</div>
+	
+		<div class="row search-options-row">
+			<!-- selections box -->
+				<div class="col-lg-12 city-airport-container" collapse="!displayFromPanel">
+					
+					<div airport-picker countries="allCountries" search="targetRouteInfo.cityFrom.name" airports="allAirports" targetairport="targetRouteInfo.cityFrom" routes="allRoutes" filteraparray="allRoutes" filterairport="targetRouteInfo.cityTo" on-airport-change="onSelectOriginAirport()" outside-click="hideFromPanel()"></div>
+				</div>
+
+				<div class="col-lg-12 city-airport-container" collapse="!displayToPanel">
+					<div airport-picker countries="allCountries" search="targetRouteInfo.cityTo.name" airports="allAirports" targetairport="targetRouteInfo.cityTo" routes="allRoutes" filteraparray="desRoutes" filterairport="targetRouteInfo.cityFrom" on-airport-change="onSelectReturnAirport()" outside-click="hideToPanel()"></div>
+				</div>
+		</div>
+		<!-- result box  -->
+		<div class="row search-result-box" ng-show="searchedDepResult || searchedReturnResult">
+			<div class="col-lg-24" ng-show="searchedDepResult">
+				<div class=" route-info-row">
+					<span class="">
+						{{searchedDepResult.flights ? searchedDepResult.flights[0].outbound.airportFrom.name : ''}}
+					</span>
+					<span class="flight-arrow-div">
+						<img ng-src="/assets/images/arrow-right.jpg" class="flight-arrow" />
+					</span>
+					<span class="">
+						{{searchedDepResult.flights ? searchedDepResult.flights[0].outbound.airportTo.name : ''}}
+					</span>
+				</div>
+				<div class="row date-info-row">
+					<div class="col-lg-24">
+						{{targetRouteInfo.searchStartDate ? getReadableDateStr(targetRouteInfo.searchStartDate) : ''}}
+					</div>
+				</div>
+				<div class="row title-row">
+					<div class="col-lg-5">Flight</div>
+					<div class="col-lg-5">Depart Time</div>
+
+					<div class="col-lg-5">Arrive Time</div>
+					<div class="col-lg-5 clickable" ng-click="depResultOrderReverse=!depResultOrderReverse">Price</div>
+					<div class="col-lg-4"></div>
+
+				</div>
+
+				<div class="row result-row" ng-class="{'selected': flight.outbound.price.value == targetRouteInfo.selectedReturnFlight.outbound.price.value}" ng-repeat="flight in searchedDepResult.flights | orderBy:priceOrder:depResultOrderReverse" ng-click="selectReturnFlight(flight)">
+					
+					<div class="col-lg-5"></div>
+					<div class="col-lg-5"></div>
+					<div class="col-lg-5"></div>
+					<div class="col-lg-5">{{flight.outbound.price.currencySymbol+ ' '+flight.outbound.price.value}}</div>
+					<div class="col-lg-4">
+						<input type="radio" ng-checked="flight.outbound.price.value == targetRouteInfo.selectedReturnFlight.outbound.price.value"/>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-lg-24" ng-show="roundTrip && searchedReturnResult">
+				<div class=" route-info-row">
+					<span class="">
+						{{searchedReturnResult.flights ? searchedReturnResult.flights[0].outbound.airportFrom.name : ''}}
+					</span>
+					<span class="flight-arrow-div">
+						<img ng-src="/assets/images/arrow-right.jpg" class="flight-arrow" />
+					</span>
+					<span class="">
+						{{searchedReturnResult.flights ? searchedReturnResult.flights[0].outbound.airportTo.name : ''}}
+					</span>
+				</div>
+				<div class="row date-info-row">
+					<div class="col-lg-24">
+						{{targetRouteInfo.searchStartDate ? getReadableDateStr(targetRouteInfo.searchStartDate) : ''}}
+					</div>
+				</div>
+				<div class="row title-row">
+					<div class="col-lg-5">Flight</div>
+					<div class="col-lg-5">Depart Time</div>
+
+					<div class="col-lg-5">Arrive Time</div>
+					<div class="col-lg-5 clickable" ng-click="returnResultOrderReverse=!returnResultOrderReverse">Price</div>
+					<div class="col-lg-4"></div>
+
+				</div>
+
+				<div class="row result-row" ng-class="{'selected': flight.outbound.price.value == targetRouteInfo.selectedDepFlight.outbound.price.value}" ng-repeat="flight in searchedReturnResult.flights | orderBy:priceOrder:returnResultOrderReverse" ng-click="selectDepFlight(flight)">
+					
+					<div class="col-lg-5"></div>
+					<div class="col-lg-5"></div>
+					<div class="col-lg-5"></div>
+					<div class="col-lg-5">{{flight.outbound.price.currencySymbol+ ' '+flight.outbound.price.value}}</div>
+					<div class="col-lg-4">
+						<input type="radio" ng-checked="flight.outbound.price.value == targetRouteInfo.selectedDepFlight.outbound.price.value"/>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
-
-	<!-- selections box -->
-	<div>
-		<div collapse="!displayFromPanel">
-			All of the cities:
-			<div airport-picker countries="allCountries" search="targetRouteInfo.cityFrom.name" airports="allAirports" targetairport="targetRouteInfo.cityFrom" routes="allRoutes" filteraparray="allRoutes" filterairport="targetRouteInfo.cityTo"></div>
-
-
-		</div>
-		<div collapse="!displayToPanel">
-			<div airport-picker countries="allCountries" search="targetRouteInfo.cityTo.name" airports="allAirports" targetairport="targetRouteInfo.cityTo" routes="allRoutes" filteraparray="desRoutes" filterairport="targetRouteInfo.cityFrom"></div>
-		</div>
-	</div>
-
-	<!-- result box  -->
-	<div></div>
 </div>

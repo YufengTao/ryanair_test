@@ -1,4 +1,4 @@
-/*! ryanair-test-app - v1.0.0 - 2015-04-26 */
+/*! ryanair-test-app - v1.0.0 - 2015-04-27 */
 (function(window, document, undefined) {'use strict';
 
 /**
@@ -26326,9 +26326,18 @@ var states = [
         stateObj: {
             url: '/',
             views: {
+                "topNavBar": {
+                    templateUrl: "/partials/includes/top-nav-bar.html",
+                },
                 "main": {
+                    templateUrl: "/partials/pages/home.html",
+                },
+                "banner@root":{
+                    templateUrl: "/partials/includes/banner.html"
+                },
+                "body@root": {
                     templateUrl: "/partials/pages/flight/search.html",
-                }
+                },
             },
             data: {
                 
@@ -26826,8 +26835,8 @@ angular.module('rt.resources')
 'use strict';
 
 angular.module('rt.controllers', [])
-	.controller('FlightSearchController', ['$scope', '$rootScope', '$state', 'CountryService','AirportService','RoutesService', 'AirportsManager', 'CountriesManager', 'FlightService', 'RoutesManager', 'Functions',
-		function($scope, $rootScope, $state, CountryService, AirportService, RoutesService,AirportsManager, CountriesManager, FlightService, RoutesManager, Functions){
+	.controller('FlightSearchController', ['$scope', '$rootScope', '$state', 'CountryService','AirportService','RoutesService', 'AirportsManager', 'CountriesManager', 'FlightService', 'RoutesManager', 'Functions', '$timeout',
+		function($scope, $rootScope, $state, CountryService, AirportService, RoutesService,AirportsManager, CountriesManager, FlightService, RoutesManager, Functions, $timeout){
 
 			$scope.targetRouteInfo = {
 				cityFrom 	: {
@@ -26839,10 +26848,13 @@ angular.module('rt.controllers', [])
 				searchStartDate 	: '',
 				searchEndDate 		: '',
 				maxPrice 			: '',
+
+				selectedDepFlight 	:{},
+				selectedReturnFlight:{}
 			};
 
 			$scope.allAirports 		= [];
-			$scope.allCountries 	= [];
+			$scope.allCountries;
 			$scope.allRoutes 		= [];
 			$scope.desRoutes 		= [];
 
@@ -26850,9 +26862,29 @@ angular.module('rt.controllers', [])
 			$scope.displayToPanel 		= false;
 			$scope.displayMap 			= false;
 
+			$scope.searchedDepResult 	= null;
+			$scope.searchedReturnResult = null;
+
+			$scope.depResultOrderReverse= false;
+			$scope.returnResultOrderReverse= false;
+
 			$scope.displayResults 		= false;
 
-			$scope.calendarOpened = false;
+			$scope.calendarOpened 		= false;
+			
+			$scope.message 				= '';
+			$scope.messageType 			= '';
+
+			$scope.roundTrip 			= true;
+
+			$scope.pageContents 	= {
+				originInputPlaceHolder 	: 'Origin airport',
+				desInputPlaceHolder 	: 'Destination airport',
+				depDateInputPlaceHolder 	: 'Departure Date',
+				returnDateInputPlaceHolder 	: 'Return Date',
+				maxPriceInputPlaceHolder: 'Max Price',
+				searchButtonText 		: 'Search'
+			};
 
 			$scope.formats = [ 'd MMM yyyy','dd-MMMM-yyyy', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
   			$scope.format = $scope.formats[0];
@@ -26867,6 +26899,9 @@ angular.module('rt.controllers', [])
 			$scope.departureCalEndDate 		= $scope.currentDate;
 			$scope.returnCalStartDate 		= $scope.currentDate;
 
+			$scope.getReadableDateStr = function(date){
+				return Functions.getReadableDateStrFromDate(date);
+			};
 
   			$scope.openCalendar = function($event) {
 			    $event.preventDefault();
@@ -26897,7 +26932,17 @@ angular.module('rt.controllers', [])
 			};
 
 			$scope.showFromPanel = function(){
-				$scope.displayFromPanel = true;
+
+				var delay = 0;
+				if($scope.displayToPanel === true){
+					delay = 1000;
+				}
+				$timeout(function(){
+					$scope.displayFromPanel = true;
+				},delay);
+				
+				$scope.displayToPanel 	= false;
+				
 			}
 
 			$scope.hideFromPanel = function(){
@@ -26905,34 +26950,187 @@ angular.module('rt.controllers', [])
 			}
 
 			$scope.showToPanel = function(){
-				$scope.displayToPanel = true;
+				var delay = 0;
+				if($scope.displayFromPanel === true){
+					delay = 1000;
+				}
+
+				$timeout(function(){
+					$scope.displayToPanel = true;
+				},delay);
+				
+				$scope.displayFromPanel = false;
+				
 			}
 
 			$scope.hideToPanel = function(){
 				$scope.displayToPanel = false;
+			};
+
+			$scope.onSelectOriginAirport = function(){
+				console.log('onSelectOriginAirport is fired');
+				$scope.displayFromPanel = false;
+			};
+
+			$scope.onSelectReturnAirport = function(){
+				$scope.displayToPanel = false;
+			};
+
+			$scope.onFromPanelBlur = function(){
+				$scope.displayFromPanel = false;
+			};
+
+			$scope.onToPanelBlur = function(){
+				$scope.displayToPanel = false;
+			};
+
+			$scope.priceOrder = function(flight){
+				return parseInt(flight.outbound.price.value);
 			}
 
 			$scope.search = function(){
 				console.log('start to search...');
 				//$scope.displayFromPanel = !$scope.displayFromPanel;
+
+				//reset
+				$scope.message = '';
+				$scope.messageType = '';
+
+				//check parameters
+				if($scope.targetRouteInfo.cityFrom.iataCode == 'undefined' ||
+					$scope.targetRouteInfo.cityFrom.name == ''){
+					$scope.messageType 	= 'error';
+					$scope.message 		= 'Please select or enter a depart airport';
+				}
+				else if($scope.targetRouteInfo.cityTo.iataCode == 'undefined'||
+					$scope.targetRouteInfo.cityTo.name == ''){
+					$scope.messageType 	= 'error';
+					$scope.message 		= 'Please select or enter a destination airport';
+				}
+				else if($scope.targetRouteInfo.searchStartDate == ''){
+					$scope.messageType 	= 'error';
+					$scope.message 		= 'Please select depart date';
+				}
+				else if( $scope.roundTrip === true &&
+						 $scope.targetRouteInfo.searchEndDate == ''){
+					$scope.messageType 	= 'error';
+					$scope.message 		= 'Please select return date';
+				}
+				else if($scope.targetRouteInfo.maxPrice == ''){
+					$scope.messageType 	= 'error';
+					$scope.message 		= 'Please enter a max price';
+				}
+
+				if($scope.messageType = 'error'){
+
+					$timeout(function() {
+						$scope.messageType  = '';
+						$scope.message 		= '';
+					}, 5000);
+
+					return;
+				}
 				
 				var searchOptions = {
 					from 	: $scope.targetRouteInfo.cityFrom.iataCode,
 					to 		: $scope.targetRouteInfo.cityTo.iataCode,
-					start_date : Functions.getSearchStdDateStr($scope.targetRouteInfo.searchStartDate),
-					end_date : Functions.getSearchStdDateStr($scope.targetRouteInfo.searchStartDate),
+					start_date : Functions.getSearchStdDateStr($scope.targetRouteInfo.searchEndDate),
+					end_date : Functions.getSearchStdDateStr($scope.targetRouteInfo.searchEndDate),
 					max_price: $scope.targetRouteInfo.maxPrice
 				}
 				
 				FlightService.getCheapFlightSingleLineWithProxy(searchOptions).then(function(data){
 					console.log('the cheap flight info is:');
 					console.log(data);
+
+					$scope.searchedDepResult = data;
 				}, function(){
 
 				});
+
+				var searchReturnOptions = {
+					from 	: $scope.targetRouteInfo.cityTo.iataCode,
+					to 		: $scope.targetRouteInfo.cityFrom.iataCode,
+					start_date : Functions.getSearchStdDateStr($scope.targetRouteInfo.searchStartDate),
+					end_date : Functions.getSearchStdDateStr($scope.targetRouteInfo.searchStartDate),
+					max_price: $scope.targetRouteInfo.maxPrice
+				}
+
+				if($scope.roundTrip === true){
+
+					FlightService.getCheapFlightSingleLineWithProxy(searchReturnOptions).then(function(data){
+						console.log('the cheap flight info is:');
+						console.log(data);
+
+						$scope.searchedReturnResult = data;
+					}, function(){
+
+					});
 				
+				}
 				
 			};
+
+			$scope.selectDepFlight =function(flight){
+				console.log('setting the dep flight');
+				$scope.targetRouteInfo.selectedDepFlight = flight;
+			}
+
+			$scope.selectReturnFlight =function(flight){
+				$scope.targetRouteInfo.selectedReturnFlight = flight;
+			}
+			
+
+			$scope.autoSelectDepAirport = function(){
+				console.log('start auto select');
+
+				if(''==$scope.targetRouteInfo.cityFrom.name){
+					$scope.targetRouteInfo.cityFrom = {
+						name : '',
+
+					};
+					return;
+				}
+
+
+
+				var searchMatch = new RegExp($scope.targetRouteInfo.cityFrom.name, 'i');
+				for(var apIndex=0;apIndex<$scope.allAirports.length;apIndex++){
+					var airport = $scope.allAirports[apIndex];
+					if(searchMatch.test(airport.name)){
+						$scope.targetRouteInfo.cityFrom = Functions.deepClone(airport);
+						break;
+					}
+				}
+			}
+
+			$scope.autoSelectReturnAirport = function(){
+				console.log('start auto select autoSelectReturnAirport');
+
+				if(''==$scope.targetRouteInfo.cityTo.name){
+					$scope.targetRouteInfo.cityTo = {
+						name : '',
+						
+					};
+					return;
+				}
+
+
+
+				var searchMatch = new RegExp($scope.targetRouteInfo.cityTo.name, 'i');
+				for(var apIndex=0;apIndex<$scope.allAirports.length;apIndex++){
+					var airport = $scope.allAirports[apIndex];
+					console.log('test the '+apIndex+"th airport:");
+					console.log(airport);
+					
+					if(searchMatch.test(airport.name)){
+						$scope.targetRouteInfo.cityTo = Functions.deepClone(airport);
+						break;
+					}
+				}
+			}
+
+			//
 
 			AirportsManager.getAirports().then(function(data){
 
@@ -26950,11 +27148,15 @@ angular.module('rt.controllers', [])
 				$scope.allCountries = data;
 
 				console.log('Country instance has been initialized');
-                console.log(data);
+                console.log($scope.allCountries);
 			}, function(data){
 
 			});
 
+			//TEST PART
+			//$scope.searchedDepResult = JSON.parse('{"flights":[{"outbound":{"airportFrom":{"iataCode":"PDV","name":"Plovdiv","base":false,"latitude":42.0678,"longitude":24.8508,"country":{"code":"bg","name":"Bulgaria","seoName":"bulgaria","englishSeoName":"bulgaria","currency":"EUR","url":"bulgaria"}},"airportTo":{"iataCode":"HHN","name":"Frankfurt Hahn","base":true,"latitude":49.9487,"longitude":7.26389,"country":{"code":"de","name":"Germany","seoName":"germany","englishSeoName":"germany","currency":"EUR","url":"germany"}},"price":{"value":"1965.88","valueMainUnit":"1965","valueFractionalUnit":"88","currencySymbol":"€"},"dateFrom":"2015-04-26T00:00:00+00:00","dateTo":"2015-04-26T00:00:00+00:00"}},{"outbound":{"airportFrom":{"iataCode":"PDV","name":"Plovdiv","base":false,"latitude":42.0678,"longitude":24.8508,"country":{"code":"bg","name":"Bulgaria","seoName":"bulgaria","englishSeoName":"bulgaria","currency":"EUR","url":"bulgaria"}},"airportTo":{"iataCode":"HHN","name":"Frankfurt Hahn","base":true,"latitude":49.9487,"longitude":7.26389,"country":{"code":"de","name":"Germany","seoName":"germany","englishSeoName":"germany","currency":"EUR","url":"germany"}},"price":{"value":"152.46","valueMainUnit":"152","valueFractionalUnit":"46","currencySymbol":"€"},"dateFrom":"2015-04-26T00:00:00+00:00","dateTo":"2015-04-26T00:00:00+00:00"}},{"outbound":{"airportFrom":{"iataCode":"PDV","name":"Plovdiv","base":false,"latitude":42.0678,"longitude":24.8508,"country":{"code":"bg","name":"Bulgaria","seoName":"bulgaria","englishSeoName":"bulgaria","currency":"EUR","url":"bulgaria"}},"airportTo":{"iataCode":"HHN","name":"Frankfurt Hahn","base":true,"latitude":49.9487,"longitude":7.26389,"country":{"code":"de","name":"Germany","seoName":"germany","englishSeoName":"germany","currency":"EUR","url":"germany"}},"price":{"value":"1998.42","valueMainUnit":"1998","valueFractionalUnit":"42","currencySymbol":"€"},"dateFrom":"2015-04-26T00:00:00+00:00","dateTo":"2015-04-26T00:00:00+00:00"}},{"outbound":{"airportFrom":{"iataCode":"PDV","name":"Plovdiv","base":false,"latitude":42.0678,"longitude":24.8508,"country":{"code":"bg","name":"Bulgaria","seoName":"bulgaria","englishSeoName":"bulgaria","currency":"EUR","url":"bulgaria"}},"airportTo":{"iataCode":"HHN","name":"Frankfurt Hahn","base":true,"latitude":49.9487,"longitude":7.26389,"country":{"code":"de","name":"Germany","seoName":"germany","englishSeoName":"germany","currency":"EUR","url":"germany"}},"price":{"value":"1044.83","valueMainUnit":"1044","valueFractionalUnit":"83","currencySymbol":"€"},"dateFrom":"2015-04-26T00:00:00+00:00","dateTo":"2015-04-26T00:00:00+00:00"}},{"outbound":{"airportFrom":{"iataCode":"PDV","name":"Plovdiv","base":false,"latitude":42.0678,"longitude":24.8508,"country":{"code":"bg","name":"Bulgaria","seoName":"bulgaria","englishSeoName":"bulgaria","currency":"EUR","url":"bulgaria"}},"airportTo":{"iataCode":"HHN","name":"Frankfurt Hahn","base":true,"latitude":49.9487,"longitude":7.26389,"country":{"code":"de","name":"Germany","seoName":"germany","englishSeoName":"germany","currency":"EUR","url":"germany"}},"price":{"value":"184.02","valueMainUnit":"184","valueFractionalUnit":"02","currencySymbol":"€"},"dateFrom":"2015-04-26T00:00:00+00:00","dateTo":"2015-04-26T00:00:00+00:00"}},{"outbound":{"airportFrom":{"iataCode":"PDV","name":"Plovdiv","base":false,"latitude":42.0678,"longitude":24.8508,"country":{"code":"bg","name":"Bulgaria","seoName":"bulgaria","englishSeoName":"bulgaria","currency":"EUR","url":"bulgaria"}},"airportTo":{"iataCode":"HHN","name":"Frankfurt Hahn","base":true,"latitude":49.9487,"longitude":7.26389,"country":{"code":"de","name":"Germany","seoName":"germany","englishSeoName":"germany","currency":"EUR","url":"germany"}},"price":{"value":"907.00","valueMainUnit":"907","valueFractionalUnit":"00","currencySymbol":"€"},"dateFrom":"2015-04-26T00:00:00+00:00","dateTo":"2015-04-26T00:00:00+00:00"}},{"outbound":{"airportFrom":{"iataCode":"PDV","name":"Plovdiv","base":false,"latitude":42.0678,"longitude":24.8508,"country":{"code":"bg","name":"Bulgaria","seoName":"bulgaria","englishSeoName":"bulgaria","currency":"EUR","url":"bulgaria"}},"airportTo":{"iataCode":"HHN","name":"Frankfurt Hahn","base":true,"latitude":49.9487,"longitude":7.26389,"country":{"code":"de","name":"Germany","seoName":"germany","englishSeoName":"germany","currency":"EUR","url":"germany"}},"price":{"value":"1341.11","valueMainUnit":"1341","valueFractionalUnit":"11","currencySymbol":"€"},"dateFrom":"2015-04-26T00:00:00+00:00","dateTo":"2015-04-26T00:00:00+00:00"}},{"outbound":{"airportFrom":{"iataCode":"PDV","name":"Plovdiv","base":false,"latitude":42.0678,"longitude":24.8508,"country":{"code":"bg","name":"Bulgaria","seoName":"bulgaria","englishSeoName":"bulgaria","currency":"EUR","url":"bulgaria"}},"airportTo":{"iataCode":"HHN","name":"Frankfurt Hahn","base":true,"latitude":49.9487,"longitude":7.26389,"country":{"code":"de","name":"Germany","seoName":"germany","englishSeoName":"germany","currency":"EUR","url":"germany"}},"price":{"value":"81.28","valueMainUnit":"81","valueFractionalUnit":"28","currencySymbol":"€"},"dateFrom":"2015-04-26T00:00:00+00:00","dateTo":"2015-04-26T00:00:00+00:00"}}],"count":8,"totalCount":8,"currency":{"symbol":"€","maxPrice":"2000","defaultPrice":0},"currencySymbol":"€","request":{"from":"PDV","to":"HHN","start_date":"2015-04-26","end_date":"2015-04-26","max_price":"2000"}}');
+			//console.log('$scope.searchedDepResult is:');
+			//console.log($scope.searchedDepResult);
 
 			RoutesManager.getRoutes().then(function(data){
 
@@ -27135,6 +27337,10 @@ angular.module('rt.filters', [])
         return function (countries, searchNeedle, afterFilterCountryArray) {
             //console.log('start to filter, the countries are:');
             //console.log(countries);
+
+            if( typeof(countries) == 'undefined' || countries.length == 'undefined' ){
+                return [];
+            }
             //console.log("searchNeedle:"+searchNeedle+"<");
 
             if(afterFilterCountryArray.length > 0){
@@ -27153,7 +27359,7 @@ angular.module('rt.filters', [])
             var searchMatch = new RegExp(searchNeedle, 'i');
             for (var i = 0; i < countries.length; i++) {
                 var country = countries[i];
-                console.log('target is:'+String.prototype.trim(searchNeedle));
+                //console.log('target is:'+String.prototype.trim(searchNeedle));
                 if( !angular.isString(searchNeedle) || 
                     '' == searchNeedle.trim(searchNeedle) ){
                     country.searchMatched = false;  
@@ -27209,7 +27415,7 @@ angular.module('rt.filters', [])
                 result_array = [];
                 for (var i = 0; i < newRangeAirportArray.length; i++) {
                     var airport = newRangeAirportArray[i];
-                    console.log('target is:'+String.prototype.trim(searchNeedle));
+                    //console.log('target is:'+String.prototype.trim(searchNeedle));
                     
                     if (searchMatch.test(airport.name)) {
                         result_array.push(airport);
@@ -27274,6 +27480,15 @@ angular.module('rt.functions', [])
             return resultStr;    
         };
 
+        var getReadableDateStrFromDate = function(dateObj){
+
+            dateObj = (dateObj instanceof Date) ? dateObj : new Date(dateObj);
+
+            var dd  = dateObj.getDate().toString();
+
+            return getWeekDayLongName(dateObj.getDay()) + ', '+getMonthShortName(dateObj.getMonth())+ ' '+ (dd[1]?dd:"0"+dd[0]) + ' '+dateObj.getFullYear();  
+        }
+
         var getSearchStdDateStr = function(dateObj){
             /*String format: yyyy-mm-dd*/
             if( dateObj && 
@@ -27293,7 +27508,13 @@ angular.module('rt.functions', [])
             var weekDayShortNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
             return (isNumber(index) && 0 <= index && 6>=index) ? weekDayShortNames[index] : '';
-        }
+        };
+
+        var getWeekDayLongName = function (index){
+            var weekDayShortNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+            return (isNumber(index) && 0 <= index && 6>=index) ? weekDayShortNames[index] : '';
+        };
 
         var getMonthShortName = function(index){
             var monthShortNames = ['Jan','Feb','Mar','Apr','May','June','July','Aug','Sep','Oct','Nov','Dec'];
@@ -27419,7 +27640,9 @@ angular.module('rt.functions', [])
             deepCloneArray:         deepCloneArray,
             getSearchStdDateStr : getSearchStdDateStr,
             getReadableDateStr  :  getReadableDateStr,
+            getReadableDateStrFromDate : getReadableDateStrFromDate,
             getMonthShortName   :    getMonthShortName,
+            getWeekDayLongName  :   getWeekDayLongName,
             mobileCheck         :   mobileCheck,
             isNumber            :   isNumber,
             isEmpty             :   isEmpty
@@ -27433,7 +27656,7 @@ angular.module('rt.directives', [])
             restrict: 'AE',
             replace: true,
             terminal: true,
-            scope: { date: '=', mindate: '=', maxdate: '=', onDateChange: "&" },
+            scope: { date: '=', mindate: '=', maxdate: '=', phtext: '=', onDateChange: "&" },
             link: function (scope, element, attrs) {
                 
                 scope.calendarOpened = false;
@@ -27486,7 +27709,7 @@ angular.module('rt.directives', [])
 
 
                 var template =  '<div>'+
-                                    '<input class="form-control" value="{{dateDisplayStr}}" ng-click="openCalendar($event)" />'+
+                                    '<input class="form-control rt-normal-input" value="{{dateDisplayStr}}" ng-click="openCalendar($event)" placeholder="{{phtext}}" />'+
                                     '<div type="text"  datepicker-popup="{{format}}" ng-model="date" is-open="calendarOpened" ng-click="openCalendar($event)" min-date="mindate" max-date="maxdate" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" close-text="Close" ng-change="onDateChanged()"></div>'+
                                 '</div>';
 
@@ -27499,7 +27722,7 @@ angular.module('rt.directives', [])
                 restrict: 'AE',
                 replace: true,
                 terminal: true,
-                scope: { countries: '=', search: '=', airports: '=', targetairport: '=', routes: '=', filteraparray : '=', filterairport : '=' },
+                scope: { countries: '=', search: '=', airports: '=', targetairport: '=', routes: '=', filteraparray : '=', filterairport : '=', onAirportChange : '&' },
                 link: function (scope, element, attrs) {
 
                     scope.selectedCountry = {};
@@ -27514,12 +27737,23 @@ angular.module('rt.directives', [])
                         console.log('selected airport is:');
                         console.log(airport);
                         scope.targetairport = Functions.deepClone(airport);
+                        console.log('firing the event onAirportChange');
+                        scope.onAirportChange();
+                    };
+
+                    scope.onPanelBlur = function(){
+                        console.log('onPanelBlur fired');
+                        //scope.onCursorBlur();
                     };
 
                     scope.$watch('filterairport.iataCode',function(newValue, oldValue){
                         console.log('filterairport value changed:');
                         console.log(oldValue);
                         console.log(newValue);
+
+                        if(newValue == ''){
+                            scope.afterFilterAirportArray = airports;
+                        }
 
                         if( typeof scope.filterairport == "object" &&
                             scope.filteraparray.hasOwnProperty(newValue) ){
@@ -27543,13 +27777,23 @@ angular.module('rt.directives', [])
                         console.log(scope.afterFilterCountryArray);
                     });
 
-                    var template =  '<div>'+
-                                        '<div>'+
-                                            '<div ng-class="{\'test-hight-light\': country.searchMatched}" ng-repeat="country in countries | hightLightCountry : search : afterFilterCountryArray" ng-click="selectCountry(country)">{{country.name}}</div>'+
-                                        '</div>' +
-                                        '<div style="float:right;position:relative">'+
-                                            '<div ng-repeat="airport in airports | filterAirport : search : selectedCountry : afterFilterAirportArray" ng-click="selectAirport(airport)">{{airport.name}}</div>'+
+                    var template =  '<div class="">'+
+                                        '<div class="row country-airport-title-row">'+
+                                            '<div class="col-lg-17 country-title-div">SELECT COUNTRY</div>'+
+                                            '<div class="col-lg-7 airport-title-div">SELECT AIRPORT</div>'+
                                         '</div>'+
+                                        '<div class="row" ng-blur="onPanelBlur()">'+
+                                            '<div class="col-lg-17 countries-div">'+
+                                                '<ul>'+
+                                                    '<li class="country-selector-div" ng-class="{\'high-light\': country.searchMatched}" ng-repeat="country in countries | hightLightCountry : search : afterFilterCountryArray" ng-click="selectCountry(country)">{{country.name}}</li>'+
+                                                '</ul>'+
+                                            '</div>'+
+                                            '<div class="col-lg-7 airports-div">'+
+                                                '<div class="row">'+
+                                                    '<div class="col-lg-24 airport-selector-div" ng-repeat="airport in airports | filterAirport : search : selectedCountry : afterFilterAirportArray" ng-click="selectAirport(airport)">{{airport.name}}</div>'+
+                                                '</div>'+
+                                            '</div>'+
+                                        '</div>' +
                                     '</div>';
                     
 
@@ -27557,6 +27801,71 @@ angular.module('rt.directives', [])
                 }
             }
             
+    }]).directive("outsideClick", ['$document','$parse', function( $document, $parse ){
+        return {
+            link: function( $scope, $element, $attributes ){
+                var scopeExpression = $attributes.outsideClick,
+                    onDocumentClick = function(event){
+
+                        var checkHasClass = function(targetElement){
+                            //console.log('target element is:');
+                            //console.log(targetElement);
+
+                            if(null == targetElement || 
+                                'undefined' == targetElement){
+                                return false;
+                            }
+
+                            //console.log(targetElement.className);
+                            var checkResult = false;
+                            if( targetElement.className !== 'undefined' &&
+                                -1 !== targetElement.className.indexOf('city-airport-container')){
+                                return true;
+                            }
+                            //console.log('dont have the class name');
+
+                            if( targetElement.parentElement !== 'undefined'){
+                                //console.log('has parent,next level =>');
+                                //console.log(targetElement.parentElement);
+                                
+                                    if(true == checkHasClass(targetElement.parentElement)) {
+                                        return true;
+                                    }
+                            }
+
+                            return checkResult;
+                        }
+
+                        /*console.log('the $element is:');
+                        console.log($element);
+                        console.log('event.target is:');
+                        console.log(event.target);
+                        console.log(angular.element(event.target));
+                        console.log(angular.element(event.target)[0]);
+                        console.log('countries divs are:');
+                        console.log(angular.element($document[0].querySelector('.countries-div'))[0]);
+                        console.log('find result:');*/
+                        //console.log($element.find(angular.element(document.getElementsByClassName("countries-div") )[0]));
+
+
+                        //var isChild = $element.find(event.target).length > 0;
+                        //var isChild = $element.find(angular.element($document[0].querySelector('.countries-div'))[0]).length > 0;
+                        var isChild = checkHasClass(angular.element(event.target)[0] );
+                        
+
+
+                        if(!isChild) {
+                            $scope.$apply(scopeExpression);
+                        }
+                    };
+
+                $document.on("click", onDocumentClick);
+
+                $element.on('$destroy', function() {
+                    $document.off("click", onDocumentClick);
+                });
+            }
+        }
     }]);
 'use strict';
 

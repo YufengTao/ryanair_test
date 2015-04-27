@@ -5,6 +5,10 @@ angular.module('rt.filters', [])
         return function (countries, searchNeedle, afterFilterCountryArray) {
             //console.log('start to filter, the countries are:');
             //console.log(countries);
+
+            if( typeof(countries) == 'undefined' || countries.length == 'undefined' ){
+                return [];
+            }
             //console.log("searchNeedle:"+searchNeedle+"<");
 
             if(afterFilterCountryArray.length > 0){
@@ -23,7 +27,7 @@ angular.module('rt.filters', [])
             var searchMatch = new RegExp(searchNeedle, 'i');
             for (var i = 0; i < countries.length; i++) {
                 var country = countries[i];
-                console.log('target is:'+String.prototype.trim(searchNeedle));
+                //console.log('target is:'+String.prototype.trim(searchNeedle));
                 if( !angular.isString(searchNeedle) || 
                     '' == searchNeedle.trim(searchNeedle) ){
                     country.searchMatched = false;  
@@ -79,7 +83,7 @@ angular.module('rt.filters', [])
                 result_array = [];
                 for (var i = 0; i < newRangeAirportArray.length; i++) {
                     var airport = newRangeAirportArray[i];
-                    console.log('target is:'+String.prototype.trim(searchNeedle));
+                    //console.log('target is:'+String.prototype.trim(searchNeedle));
                     
                     if (searchMatch.test(airport.name)) {
                         result_array.push(airport);

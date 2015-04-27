@@ -1,0 +1,11 @@
+@import '../bower_components/bourbon/app/assets/stylesheets/bourbon';
+
+
+
+$gradient-yellow-bg-color-1: #feda38;//light 3
+$gradient-yellow-bg-color-2: #fecb1b;//light 4
+$gradient-yellow-bg-color-3: #fed024;//light 5
+
+.gradient-yellow-bg-vert-color{
+	@include background-image(linear-gradient( $gradient-yellow-bg-color-1 0%, $gradient-yellow-bg-color-2 60%,  $gradient-yellow-bg-color-3 100% ));	
+}

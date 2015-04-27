@@ -1,0 +1,9 @@
+@import 'variables.scss';
+@import 'mixin.scss';
+
+.rt-search-button{
+	@extend .gradient-yellow-bg-vert-color;
+	@include gen-border-radius(0px);
+
+	font-weight:bold;
+}

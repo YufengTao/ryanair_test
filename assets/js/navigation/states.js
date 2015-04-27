@@ -9,9 +9,18 @@ var states = [
         stateObj: {
             url: '/',
             views: {
+                "topNavBar": {
+                    templateUrl: "/partials/includes/top-nav-bar.html",
+                },
                 "main": {
+                    templateUrl: "/partials/pages/home.html",
+                },
+                "banner@root":{
+                    templateUrl: "/partials/includes/banner.html"
+                },
+                "body@root": {
                     templateUrl: "/partials/pages/flight/search.html",
-                }
+                },
             },
             data: {
                 
