@@ -209,6 +209,24 @@ angular.module('rt.controllers', [])
 					console.log('the cheap flight info is:');
 					console.log(data);
 
+					//update the data with test dummy data
+
+					if(data.flights.length > 0){
+
+						//add flight id
+						for(var flightIndex in data.flights){
+							var flightObj = data.flights[flightIndex].outbound;
+							flightObj.flightId = Functions.getRandomChar()+Functions.getRandomChar()+Functions.getRandomChar()+Functions.getRandomSingleInteger()+Functions.getRandomSingleInteger()+Functions.getRandomSingleInteger()+Functions.getRandomSingleInteger();
+
+							var fromDateObj  = Date(flightObj.dateFrom);
+							fromDateObj.setHours(Math.random() * 24);
+							fromDateObj.setMinutes(Math.random() * 60);
+							
+						}
+					}
+
+					//===========================
+
 					$scope.searchedDepResult = data;
 				}, function(){
 

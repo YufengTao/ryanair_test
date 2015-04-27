@@ -184,6 +184,14 @@ angular.module('rt.functions', [])
             return !isNaN(parseFloat(n)) && isFinite(n);
         };
 
+        var getRandomSingleInteger = function(){
+            return String.fromCharCode( parseInt(Math.random() * (58-44) + 48) );
+        };
+
+        var getRandomChar   = function(){
+            return String.fromCharCode( parseInt(Math.random() * (91-65) + 65) );
+        }
+
         //define functions for IE browser
         if(typeof String.prototype.trim !== 'function') {
             String.prototype.trim = function() {
@@ -204,7 +212,9 @@ angular.module('rt.functions', [])
             getWeekDayLongName  :   getWeekDayLongName,
             mobileCheck         :   mobileCheck,
             isNumber            :   isNumber,
-            isEmpty             :   isEmpty
+            isEmpty             :   isEmpty,
+            getRandomSingleInteger : getRandomSingleInteger,
+            getRandomChar       : getRandomChar
 
         };
 
