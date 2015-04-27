@@ -27021,7 +27021,7 @@ angular.module('rt.controllers', [])
 					$scope.message 		= 'Please enter a max price';
 				}
 
-				if($scope.messageType = 'error'){
+				if($scope.messageType =='error'){
 
 					$timeout(function() {
 						$scope.messageType  = '';
