@@ -218,10 +218,16 @@ angular.module('rt.controllers', [])
 							var flightObj = data.flights[flightIndex].outbound;
 							flightObj.flightId = Functions.getRandomChar()+Functions.getRandomChar()+Functions.getRandomChar()+Functions.getRandomSingleInteger()+Functions.getRandomSingleInteger()+Functions.getRandomSingleInteger()+Functions.getRandomSingleInteger();
 
-							var fromDateObj  = Date(flightObj.dateFrom);
+							var fromDateObj  = new Date(flightObj.dateFrom);
 							fromDateObj.setHours(Math.random() * 24);
 							fromDateObj.setMinutes(Math.random() * 60);
+
+							var toDateObj  = new Date(flightObj.dateTo);
+							toDateObj.setHours(Math.random() * 24);
+							toDateObj.setMinutes(Math.random() * 60);
 							
+							flightObj.dateFrom = Functions.getServerStdUTCTimeStr(fromDateObj);
+							flightObj.dateTo = Functions.getServerStdUTCTimeStr(toDateObj);
 						}
 					}
 

@@ -81,6 +81,21 @@ angular.module('rt.functions', [])
             return (isNumber(index) && 0 <= index && 11>=index) ? monthShortNames[index] : '';
         };
 
+        var getServerStdUTCTimeStr = function(dataObj){
+
+            //example data string format: 2015-05-08T00:00:00+00:00
+            var year    = dataObj.getUTCFullYear();
+            var month   = dataObj.getUTCMonth();
+            var date    = dataObj.getUTCDate();
+            var hour    = dataObj.getUTCHours();
+            var minute  = dataObj.getUTCMinutes();
+            var second  = dataObj.getUTCSeconds();
+
+            var dateStr = ''+year + '-'+ (month<9 ? '0'+(month+1) : (month+1) )+'-'+(date<10 ? '0'+date : date)+'T'+(hour<10 ? '0'+hour : hour)+':'+( minute<10 ? '0'+minute : minute )+':'+( second<10 ? '0'+second : second )+'+00:00';
+
+            return dateStr;
+        };
+
 
         var deepClone = function(targetObj){
             var clonedObj;
@@ -210,6 +225,7 @@ angular.module('rt.functions', [])
             getReadableDateStrFromDate : getReadableDateStrFromDate,
             getMonthShortName   :    getMonthShortName,
             getWeekDayLongName  :   getWeekDayLongName,
+            getServerStdUTCTimeStr : getServerStdUTCTimeStr,
             mobileCheck         :   mobileCheck,
             isNumber            :   isNumber,
             isEmpty             :   isEmpty,
