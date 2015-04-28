@@ -27726,6 +27726,7 @@ angular.module('rt.functions', [])
             getMonthShortName   :    getMonthShortName,
             getWeekDayLongName  :   getWeekDayLongName,
             getServerStdUTCTimeStr : getServerStdUTCTimeStr,
+            getHHMMTimeFromDate : getHHMMTimeFromDate,
             mobileCheck         :   mobileCheck,
             isNumber            :   isNumber,
             isEmpty             :   isEmpty,
