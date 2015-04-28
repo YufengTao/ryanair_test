@@ -26903,6 +26903,10 @@ angular.module('rt.controllers', [])
 				return Functions.getReadableDateStrFromDate(date);
 			};
 
+			$scope.getReadableFullDateStr = function(date){
+				return Functions.getHHMMTimeFromDate(date);
+			}
+
   			$scope.openCalendar = function($event) {
 			    $event.preventDefault();
 			    $event.stopPropagation();
@@ -27068,6 +27072,9 @@ angular.module('rt.controllers', [])
 					//===========================
 
 					$scope.searchedDepResult = data;
+
+					console.log('after update:');
+					console.log(data);
 				}, function(){
 
 				});
@@ -27512,6 +27519,18 @@ angular.module('rt.functions', [])
 
             return getWeekDayLongName(dateObj.getDay()) + ', '+getMonthShortName(dateObj.getMonth())+ ' '+ (dd[1]?dd:"0"+dd[0]) + ' '+dateObj.getFullYear();  
         }
+
+        var getHHMMTimeFromDate =  function(dateObj){
+            dateObj = (dateObj instanceof Date) ? dateObj : new Date(dateObj);
+
+            var yyyy = dateObj.getFullYear().toString();
+            var mm = getMonthShortName(dateObj.getMonth());
+            var dd  = dateObj.getDate().toString();
+            var hh = dateObj.getHours().toString();
+            var min = dateObj.getMinutes().toString();
+
+            return '' +(dd[1]?dd:"0"+dd[0]) + ' ' + (mm[1]?mm:"0"+mm[0])+ ' ' + yyyy+', '  + (hh[1]?hh:"0"+hh[0]) + ':' + (min[1]?min:"0"+min[0]);
+        };
 
         var getSearchStdDateStr = function(dateObj){
             /*String format: yyyy-mm-dd*/

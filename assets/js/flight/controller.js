@@ -69,6 +69,10 @@ angular.module('rt.controllers', [])
 				return Functions.getReadableDateStrFromDate(date);
 			};
 
+			$scope.getReadableFullDateStr = function(date){
+				return Functions.getHHMMTimeFromDate(date);
+			}
+
   			$scope.openCalendar = function($event) {
 			    $event.preventDefault();
 			    $event.stopPropagation();
@@ -234,6 +238,9 @@ angular.module('rt.controllers', [])
 					//===========================
 
 					$scope.searchedDepResult = data;
+
+					console.log('after update:');
+					console.log(data);
 				}, function(){
 
 				});

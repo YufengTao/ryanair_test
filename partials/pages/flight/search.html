@@ -112,9 +112,9 @@
 
 				<div class="row result-row" ng-class="{'selected': flight.outbound.price.value == targetRouteInfo.selectedDepFlight.outbound.price.value}" ng-repeat="flight in searchedReturnResult.flights | orderBy:priceOrder:returnResultOrderReverse" ng-click="selectDepFlight(flight)">
 					
-					<div class="col-lg-5"></div>
-					<div class="col-lg-5"></div>
-					<div class="col-lg-5"></div>
+					<div class="col-lg-5">{{flight.outbound.flightId}}</div>
+					<div class="col-lg-5">{{getReadableFullDateStr(flight.outbound.dateFrom)}}</div>
+					<div class="col-lg-5">{{getReadableFullDateStr(flight.outbound.dateTo)}}</div>
 					<div class="col-lg-5">{{flight.outbound.price.currencySymbol+ ' '+flight.outbound.price.value}}</div>
 					<div class="col-lg-4">
 						<input type="radio" ng-checked="flight.outbound.price.value == targetRouteInfo.selectedDepFlight.outbound.price.value"/>
