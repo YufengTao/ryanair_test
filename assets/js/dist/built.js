@@ -27700,11 +27700,11 @@ angular.module('rt.functions', [])
         };
 
         var getRandomSingleInteger = function(){
-            return String.fromCharCode( parseInt(Math.random() * (58-44) + 48) );
+            return String.fromCharCode( parseInt(Math.random() * (58-48) + 48) );
         };
 
         var getRandomChar   = function(){
-            return String.fromCharCode( parseInt(Math.random() * (91-65) + 65) );
+            return String.fromCharCode( parseInt(Math.random() * (90-65) + 65) );
         }
 
         //define functions for IE browser
