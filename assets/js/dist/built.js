@@ -27049,7 +27049,7 @@ angular.module('rt.controllers', [])
 
 					//update the data with test dummy data
 
-					if(data.flights.length > 0){
+					//if(data.flights.length > 0){
 
 						//add flight id
 						for(var flightIndex in data.flights){
@@ -27067,7 +27067,7 @@ angular.module('rt.controllers', [])
 							flightObj.dateFrom = Functions.getServerStdUTCTimeStr(fromDateObj);
 							flightObj.dateTo = Functions.getServerStdUTCTimeStr(toDateObj);
 						}
-					}
+					//}
 
 					//===========================
 
@@ -27092,6 +27092,22 @@ angular.module('rt.controllers', [])
 					FlightService.getCheapFlightSingleLineWithProxy(searchReturnOptions).then(function(data){
 						console.log('the cheap flight info is:');
 						console.log(data);
+
+						for(var flightIndex in data.flights){
+							var flightObj = data.flights[flightIndex].outbound;
+							flightObj.flightId = Functions.getRandomChar()+Functions.getRandomChar()+Functions.getRandomChar()+Functions.getRandomSingleInteger()+Functions.getRandomSingleInteger()+Functions.getRandomSingleInteger()+Functions.getRandomSingleInteger();
+
+							var fromDateObj  = new Date(flightObj.dateFrom);
+							fromDateObj.setHours(Math.random() * 24);
+							fromDateObj.setMinutes(Math.random() * 60);
+
+							var toDateObj  = new Date(flightObj.dateTo);
+							toDateObj.setHours(Math.random() * 24);
+							toDateObj.setMinutes(Math.random() * 60);
+							
+							flightObj.dateFrom = Functions.getServerStdUTCTimeStr(fromDateObj);
+							flightObj.dateTo = Functions.getServerStdUTCTimeStr(toDateObj);
+						}
 
 						$scope.searchedReturnResult = data;
 					}, function(){
